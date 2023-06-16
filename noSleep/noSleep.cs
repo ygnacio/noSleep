@@ -14,6 +14,7 @@ namespace noSleep
 
         private const int TIME_FACTOR = 1000 * 60;
         private const int DEFAULT_TIME = 10;
+        private readonly int originalDefaultTime;
 
         //[DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true, CallingConvention = CallingConvention.Winapi)]
         //public static extern short GetKeyState(int keyCode);
@@ -21,7 +22,14 @@ namespace noSleep
         public noSleep()
         {
             InitializeComponent();
-            tbInterval.Text = DEFAULT_TIME.ToString();
+            originalDefaultTime = Properties.Settings.Default.DefaultTime;
+            tbInterval.Text = originalDefaultTime.ToString();
+            if (tbInterval.Text == "0")
+            {
+                originalDefaultTime = DEFAULT_TIME;
+                tbInterval.Text = DEFAULT_TIME.ToString();
+            }
+
             WakeUpTimer.Enabled = false;
             label2.Text = "Timer Stopped";
         }
@@ -43,6 +51,11 @@ namespace noSleep
         private void noSleep_FormClosed(object sender, FormClosedEventArgs e)
         {
             WakeUpTimer.Stop();
+            if (originalDefaultTime.ToString() != tbInterval.Text)
+            {
+                Properties.Settings.Default.DefaultTime = Convert.ToInt32(tbInterval.Text);
+                Properties.Settings.Default.Save();
+            }
         }
 
         private void buttonStart_Click(object sender, EventArgs e)
@@ -60,6 +73,7 @@ namespace noSleep
             WakeUpTimer.Start();
             label2.Text = "Timer Started";
             tbInterval.Enabled = false;
+            buttonStart.Enabled = false;
         }
 
         private void buttonStop_Click(object sender, EventArgs e)
@@ -67,6 +81,7 @@ namespace noSleep
             WakeUpTimer.Stop();
             label2.Text = "Timer Stopped";
             tbInterval.Enabled = true;
+            buttonStart.Enabled = true;
         }
 
         private async Task PutTaskDelay(int ms)
